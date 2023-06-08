@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leave Form</title>
+  <link rel="stylesheet" href="index.css">
+  <style>
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+    <div class = "container">
+        <div class = "box">
+            <h1>Leave Form</h1>
+            <form id="leaveForm" enctype="multipart/form-data">
+              <div>
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+              </div>
+              <div>
+                <label for="leaveType">Leave Type:</label><br>
+                <input type="radio" name="leaveType" value="casual"> Casual Leave<br>
+                <input type="radio" name="leaveType" value="earned"> Earned Leave<br>
+                <input type="radio" name="leaveType" value="sick"> Sick Leave<br>
+              </div>
+              <div>
+                <label for="dateFrom">From:</label>
+                <input type="date" id="dateFrom" required>
+                <label for="dateTo">To:</label>
+                <input type="date" id="dateTo" required>
+              </div>
+              <div>
+                <label for="team">Team Names:</label><br>
+                <input type="radio" name="team" value="team1"> Team 1<br>
+                <input type="radio" name="team" value="team2"> Team 2<br>
+                <input type="radio" name="team" value="team3"> Team 3<br>
+              </div>
+              <div>
+                <label for="file">File Upload:</label>
+                <input type="file" id="file" accept=".pdf,.png">
+              </div>
+              <div>
+                <label for="reporter">Reporter:</label>
+                <select id="reporter">
+                  <option value="manager1">Manager 1</option>
+                  <option value="manager2">Manager 2</option>
+                  <option value="manager3">Manager 3</option>
+                </select>
+              </div>
+              <div>
+                <button type="submit">Submit</button>
+              </div>
+            </form>
+        </div>
+    </div>
+ 
+
+  <script>
+    const leaveForm = document.getElementById('leaveForm');
+    leaveForm.addEventListener('submit', submitForm);
+
+    function submitForm(event) {
+      event.preventDefault();
+
+      // Validate form fields
+      const name = document.getElementById('name').value;
+      const leaveType = document.querySelector('input[name="leaveType"]:checked');
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+      const team = document.querySelector('input[name="team"]:checked');
+      const file = document.getElementById('file');
+      const reporter = document.getElementById('reporter').value;
+
+      let isValid = true;
+
+      if (name.trim() === '') {
+        showError('name', 'Name is required');
+        isValid = false;
+      }
+
+      if (!leaveType) {
+        showError('leaveType', 'Leave Type is required');
+        isValid = false;
+      }
+
+      if (dateFrom === '' || dateTo === '') {
+        showError('dateFrom', 'From and To dates are required');
+        isValid = false;
+      }
+
+      if (!team) {
+        showError('team', 'Team Name is required');
+        isValid = false;
+      }
+
+      if (leaveType && leaveType.value === 'sick' && (!file.files || file.files.length === 0)) {
+        showError('file', 'File Upload is required for Sick Leave');
+        isValid = false;
+      }
+
+      if (isValid) {
+        // Prepare form data for submission
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('leaveType', leaveType.value);
+        formData.append('dateFrom', dateFrom);
+        formData.append('dateTo', dateTo);
+        formData.append('team', team.value);
+        if (file.files && file.files.length > 0) {
+          formData.append('file', file.files[0]);
+        }
+        formData.append('reporter', reporter);
+
+        // Submit the form data to the backend API
+        fetch('http://localhost:8080/postleave', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => {
+            if (response.ok) {
+              // Form submission successful
+              console.log('Form submitted successfully');
+              // Clear form fields or display success message
+            } else {
+              // Form submission failed
+              console.error('Form submission failed');
+              // Display error message or handle the error appropriately
+            }
+          })
+          .catch(error => {
+            console.error('Form submission error:', error);
+            // Display error message or handle the error appropriately
+          });
+      }
+    }
+
+    function showError(fieldId, errorMessage) {
+      const field = document.getElementById(fieldId);
+      const errorSpan = document.createElement('span');
+      errorSpan.classList.add('error');
+      errorSpan.textContent = errorMessage;
+      field.insertAdjacentElement('afterend', errorSpan);
+    }
+  </script>
+</body>
+</html>
